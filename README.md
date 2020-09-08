@@ -1,2 +1,2 @@
-# RPi-Tflite-
+# RPi-Tflite
 Fire Classifier with Tflite for RaspberryPi
