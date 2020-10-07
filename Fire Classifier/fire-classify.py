@@ -6,14 +6,6 @@ import numpy as np
 
 import tflite_runtime.interpreter as tflite
 
-VALIDATE_TO_PRECISION_N = 5
-
-################################################################################
-
-sys.path.append('..')
-
-################################################################################
-
 # tflite - load model
 
 #print("Load tflite model from: firenet.tflite ...", end = '')
