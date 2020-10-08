@@ -89,8 +89,6 @@ while (True):
         cv2.setWindowProperty(windowName, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN);
     elif (key == ord('q')):
         break
-else:
-    print("usage: python firenet.py videofile.ext");
 
 video.release()
 cv2.destroyAllWindows()  
