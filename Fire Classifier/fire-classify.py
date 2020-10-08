@@ -6,24 +6,21 @@ import numpy as np
 
 import tflite_runtime.interpreter as tflite
 
-# tflite - load model
+# Load the Tflite model
 
-#print("Load tflite model from: firenet.tflite ...", end = '')
-tflife_model = tflite.Interpreter(model_path="inceptionv1onfire.tflite")
-tflife_model.allocate_tensors()
-print("OK")
+model = tflite.Interpreter(model_path="fire-classifier.tflite")
+model.allocate_tensors()
 
 # Get input and output tensors.
-tflife_input_details = tflife_model.get_input_details()
-tflife_output_details = tflife_model.get_output_details()
+tflife_input_details = model.get_input_details()
+tflife_output_details = model.get_output_details()
 
-################################################################################
 
-# load video file
+# Load the Video 
 
 video = cv2.VideoCapture('cropfire.mp4')
 
-# get video properties
+# Get the Video properties
 
 width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
 height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -57,14 +54,12 @@ while (True):
     # perform prediction with tflite model via TensorFlow
 
     tflife_input_data = np.reshape(np.float32(small_frame), (1, 224, 224, 3))
-    tflife_model.set_tensor(tflife_input_details[0]['index'], tflife_input_data)
+    model.set_tensor(tflife_input_details[0]['index'], tflife_input_data)
 
-    tflife_model.invoke()
+    model.invoke()
 
-    output_tflite = tflife_model.get_tensor(tflife_output_details[0]['index'])
-   # print("\t: TFLite (via tensorflow): ", end = '')
- #  print(output_tflite)
-    
+    output_tflite = model.get_tensor(tflife_output_details[0]['index'])
+  
 
     if round(output_tflite[0][0]) == 1:
         cv2.rectangle(frame, (0,0), (width,height), (0,0,255), 50)
