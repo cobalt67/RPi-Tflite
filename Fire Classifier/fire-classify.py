@@ -18,7 +18,11 @@ tflife_output_details = model.get_output_details()
 
 # Load the Video 
 
-video = cv2.VideoCapture('cropfire.mp4')
+video = cv2.VideoCapture(0)
+
+# For storing video file on the device
+fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+out = cv2.VideoWriter('output.mp4',fourcc, 3, (640,480))
 
 # Get the Video properties
 
@@ -33,11 +37,14 @@ while (True):
     # get video frame from file, handle end of file
 
     ret, frame = video.read()
+  # ret = video.set(3,400)
+  # ret = video.set(4,400)
+
+
     if not ret:
-        print("... end of video file reached")
+        print("error")
         break
 
-   # print("frame: " + str(frame_counter),  end = '')
     frame_counter = frame_counter + 1
 
     # re-size image to network input size and perform prediction
@@ -46,8 +53,6 @@ while (True):
     # as is the opencv norm, not {R,G,B} and pixel value range 0->255 for each channel
 
     small_frame = cv2.resize(frame, (224, 224), cv2.INTER_AREA)
-
-    ############################################################################
 
     np.set_printoptions(precision=6)
 
@@ -59,36 +64,27 @@ while (True):
     model.invoke()
 
     output_tflite = model.get_tensor(tflife_output_details[0]['index'])
-  
 
     if round(output_tflite[0][0]) == 1:
-        cv2.rectangle(frame, (0,0), (width,height), (0,0,255), 50)
-        cv2.putText(frame,'FIRE',(int(width/16),int(height/4)),
-        cv2.FONT_HERSHEY_SIMPLEX, 4,(255,255,255),10,cv2.LINE_AA);
+        cv2.rectangle(frame, (0,0), (width,height), (0,0,255), 3)
+        cv2.putText(frame,'FIRE',(int(width/3),int(height/19)),
+        cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),1,cv2.LINE_AA);
 
     else:
-        cv2.rectangle(frame, (0,0), (width,height), (0,255,0), 50)
-        cv2.putText(frame,'CLEAR',(int(width/16),int(height/4)),
-        cv2.FONT_HERSHEY_SIMPLEX, 4,(255,255,255),10,cv2.LINE_AA);    
+        cv2.rectangle(frame, (0,0), (width,height), (0,255,0), 3)
+        cv2.putText(frame,'CLEAR',(int(width/3),int(height/19)),
+        cv2.FONT_HERSHEY_SIMPLEX, 1,(255,255,255),1,cv2.LINE_AA);    
     
-    start_t = cv2.getTickCount();
-
-    stop_t = ((cv2.getTickCount() - start_t)/cv2.getTickFrequency()) * 1000;
-
-    windowName = "Live Fire Detection - FireNet CNN"
+    windowName = "Fire Detection for Edge Applications"
     cv2.imshow(windowName, frame);
+    out.write(frame)
 
     fps = video.get(cv2.CAP_PROP_FPS)
-    frame_time = round(1000/fps);
+    frame_time = round(1/fps);
 
-
-    key = cv2.waitKey(max(2, frame_time - int(math.ceil(stop_t)))) & 0xFF;
-    if (key == ord('x')):
-        keepProcessing = False;
-    elif (key == ord('f')):
-        cv2.setWindowProperty(windowName, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN);
-    elif (key == ord('q')):
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
 video.release()
+out.release()
 cv2.destroyAllWindows()  
