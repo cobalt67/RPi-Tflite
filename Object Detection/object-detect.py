@@ -1,3 +1,4 @@
+# Import packages
 import os
 import argparse
 import cv2
@@ -7,6 +8,8 @@ import time
 from threading import Thread
 import importlib.util
 
+# Define VideoStream class to handle streaming of video from webcam in separate processing thread
+# Source - Adrian Rosebrock, PyImageSearch: https://www.pyimagesearch.com/2015/12/28/increasing-raspberry-pi-fps-with-python-and-opencv/
 class VideoStream:
     """Camera object that controls video streaming from the Picamera"""
     def __init__(self,resolution=(640,480),framerate=30):
@@ -19,11 +22,11 @@ class VideoStream:
         # Read first frame from the stream
         (self.grabbed, self.frame) = self.stream.read()
 
-    # Variable to control when the camera is stopped
+	# Variable to control when the camera is stopped
         self.stopped = False
 
     def start(self):
-    # Start the thread that reads frames from the video stream
+	# Start the thread that reads frames from the video stream
         Thread(target=self.update,args=()).start()
         return self
 
@@ -40,11 +43,11 @@ class VideoStream:
             (self.grabbed, self.frame) = self.stream.read()
 
     def read(self):
-    # Return the most recent frame
+	# Return the most recent frame
         return self.frame
 
     def stop(self):
-    # Indicate that the camera and thread should be stopped
+	# Indicate that the camera and thread should be stopped
         self.stopped = True
 
 # Define and parse input arguments
@@ -59,8 +62,7 @@ parser.add_argument('--threshold', help='Minimum confidence threshold for displa
                     default=0.5)
 parser.add_argument('--resolution', help='Desired webcam resolution in WxH. If the webcam does not support the resolution entered, errors may occur.',
                     default='1280x720')
-parser.add_argument('--edgetpu', help='Use Coral Edge TPU Accelerator to speed up detection',
-                    action='store_true')
+
 
 args = parser.parse_args()
 
@@ -70,26 +72,11 @@ LABELMAP_NAME = args.labels
 min_conf_threshold = float(args.threshold)
 resW, resH = args.resolution.split('x')
 imW, imH = int(resW), int(resH)
-use_TPU = args.edgetpu
 
 # Import TensorFlow libraries
 # If tflite_runtime is installed, import interpreter from tflite_runtime, else import from regular tensorflow
 # If using Coral Edge TPU, import the load_delegate library
-pkg = importlib.util.find_spec('tflite_runtime')
-if pkg:
-    from tflite_runtime.interpreter import Interpreter
-    if use_TPU:
-        from tflite_runtime.interpreter import load_delegate
-else:
-    from tensorflow.lite.python.interpreter import Interpreter
-    if use_TPU:
-        from tensorflow.lite.python.interpreter import load_delegate
-
-# If using Edge TPU, assign filename for Edge TPU model
-if use_TPU:
-    # If user has specified the name of the .tflite file, use that name, otherwise use default 'edgetpu.tflite'
-    if (GRAPH_NAME == 'detect.tflite'):
-        GRAPH_NAME = 'edgetpu.tflite'       
+from tflite_runtime.interpreter import Interpreter
 
 # Get path to current working directory
 CWD_PATH = os.getcwd()
@@ -111,13 +98,7 @@ if labels[0] == '???':
     del(labels[0])
 
 # Load the Tensorflow Lite model.
-# If using Edge TPU, use special load_delegate argument
-if use_TPU:
-    interpreter = Interpreter(model_path=PATH_TO_CKPT,
-                              experimental_delegates=[load_delegate('libedgetpu.so.1.0')])
-    print(PATH_TO_CKPT)
-else:
-    interpreter = Interpreter(model_path=PATH_TO_CKPT)
+interpreter = Interpreter(model_path=PATH_TO_CKPT)
 
 interpreter.allocate_tensors()
 
@@ -208,4 +189,3 @@ while True:
 # Clean up
 cv2.destroyAllWindows()
 videostream.stop()
-
